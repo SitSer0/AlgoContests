@@ -5,6 +5,13 @@ const long long kMagicNumber = 10000000 + 4321;
 const long long kMagicNumber123 = 123;
 const long long kMagicNumber45 = 45;
 
+void FillArr(std::vector<long long>& arr, int number) {
+  for (int i = 2; i < number; ++i) {
+    arr[i] = (arr[i - 1] * kMagicNumber123 + arr[i - 2] * kMagicNumber45) %
+        (kMagicNumber);
+  }
+}
+
 int GivePivot(int left, int right) {
   int random_index = (left + right) / 2;
   return random_index;
@@ -51,10 +58,7 @@ int main() {
   std::vector<long long> arr(number);
   arr[0] = frst;
   arr[1] = scond;
-  for (int i = 2; i < number; ++i) {
-    arr[i] = (arr[i - 1] * kMagicNumber123 + arr[i - 2] * kMagicNumber45) %
-        (kMagicNumber);
-  }
+  FillArr(arr, number);
   int left = 0;
   int right = number - 1;
   int can_use = 1;
