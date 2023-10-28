@@ -17,23 +17,23 @@ void RadixSort(std::vector<unsigned long long>& arr, int number, int index,
   if ((right - left < 1) || index == kMagicNumber22 + 1) {
     return;
   }
-  std::vector<std::vector<unsigned long long> > raz(
+  std::vector<std::vector<unsigned long long> > numeric_digit(
       kMagicNumber10, std::vector<unsigned long long>(0));
   for (int i = left; i <= right; ++i) {
     unsigned long long ind =
         (arr[i] / PwTen(kMagicNumber22 - index)) % kMagicNumber10;
-    raz[ind].push_back(arr[i]);
+    numeric_digit[ind].push_back(arr[i]);
   }
   int kk;
   for (int i = 0; i < kMagicNumber10; i++) {
     kk = 0;
-    int razsize = raz[i].size();
-    for (int j = 0; j < razsize; ++j) {
-      arr[left + kk] = raz[i][j];
+    int numeric_digit_size = numeric_digit[i].size();
+    for (int j = 0; j < numeric_digit_size; ++j) {
+      arr[left + kk] = numeric_digit[i][j];
       kk++;
     }
-    RadixSort(arr, number, index + 1, left, left + razsize - 1);
-    left += razsize;
+    RadixSort(arr, number, index + 1, left, left + numeric_digit_size - 1);
+    left += numeric_digit_size;
   }
 }
 
