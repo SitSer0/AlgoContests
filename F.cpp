@@ -1,76 +1,94 @@
 #include <iostream>
+#include <string>
 #include <vector>
 
-const long long kMagicNumber = 10000000 + 4321;
-const long long kMagicNumber123 = 123;
-const long long kMagicNumber45 = 45;
+int Parent(int index) { return (index - 1) / 2; }
 
-void FillArr(std::vector<long long>& arr, int number) {
-  for (int i = 2; i < number; ++i) {
-    arr[i] = (arr[i - 1] * kMagicNumber123 + arr[i - 2] * kMagicNumber45) %
-        (kMagicNumber);
+int LeftChild(int index) { return 2 * index + 1; }
+
+int RightChild(int index) { return 2 * index + 2; }
+
+std::vector<long long> heap(0);
+std::vector<int> ind_to_heap(0);
+std::vector<int> heap_to_ind(0);
+int size = 0;
+
+void PushUp(int index) {
+  if (index == 0 || heap[Parent(index)] <= heap[index]) {
+    return;
   }
+  std::swap(heap[Parent(index)], heap[index]);
+  std::swap(ind_to_heap[heap_to_ind[index]],
+            ind_to_heap[heap_to_ind[Parent(index)]]);
+  std::swap(heap_to_ind[index], heap_to_ind[Parent(index)]);
+  PushUp(Parent(index));
 }
 
-int GivePivot(int left, int right) {
-  int random_index = (left + right) / 2;
-  return random_index;
+void PushDown(int index) {
+  if (LeftChild(index) > size - 1) {
+    return;
+  }
+  int min_index = LeftChild(index) == size - 1 ||
+      heap[LeftChild(index)] < heap[RightChild(index)]
+                  ? LeftChild(index)
+                  : RightChild(index);
+  if (heap[min_index] < heap[index]) {
+    std::swap(heap[min_index], heap[index]);
+    std::swap(ind_to_heap[heap_to_ind[index]],
+              ind_to_heap[heap_to_ind[min_index]]);
+    std::swap(heap_to_ind[index], heap_to_ind[min_index]);
+  }
+  PushDown(min_index);
 }
 
-std::pair<int, int> Partition(std::vector<long long>& arr, int left,
-                              int right) {
-  int pivot_ind = GivePivot(left, right);
-  long long pivot = arr[pivot_ind];
-  int equal_left = pivot_ind;
-  int equal_right = pivot_ind;
-  for (int i = equal_left - 1; i >= left; --i) {
-    if (arr[i] == pivot) {
-      std::swap(arr[i], arr[equal_left - 1]);
-      equal_left--;
-    } else if (arr[i] > pivot) {
-      std::swap(arr[i], arr[equal_left - 1]);
-      std::swap(arr[equal_left - 1], arr[equal_right]);
-      equal_left--;
-      equal_right--;
-    }
-  }
-  for (int i = equal_right + 1; i <= right; ++i) {
-    if (arr[i] == pivot) {
-      std::swap(arr[equal_right + 1], arr[i]);
-      equal_right++;
-    } else if (arr[i] < pivot) {
-      std::swap(arr[i], arr[equal_right + 1]);
-      std::swap(arr[equal_right + 1], arr[equal_left]);
-      equal_right++;
-      equal_left++;
-    }
-  }
-  return std::pair<int, int>(equal_left, equal_right);
+void Insert(long long number) {
+  heap.push_back(number);
+  size++;
+  PushUp(size - 1);
+}
+
+void GetMin() { std::cout << heap[0] << "\n"; }
+
+void ExtractMin() {
+  std::swap(heap[0], heap[size - 1]);
+  std::swap(ind_to_heap[heap_to_ind[0]], ind_to_heap[heap_to_ind[size - 1]]);
+  std::swap(heap_to_ind[0], heap_to_ind[size - 1]);
+  size--;
+  heap.pop_back();
+  heap_to_ind.pop_back();
+  PushDown(0);
+}
+
+void DecreaseKey(int index, long long delta) {
+  heap[ind_to_heap[index]] -= delta;
+  PushUp(ind_to_heap[index]);
 }
 
 int main() {
-  int number;
-  int k_stat;
-  long frst;
-  long scond;
-  std::cin >> number >> k_stat >> frst >> scond;
-  k_stat--;
-  std::vector<long long> arr(number);
-  arr[0] = frst;
-  arr[1] = scond;
-  FillArr(arr, number);
-  int left = 0;
-  int right = number - 1;
-  int can_use = 1;
-  while (can_use == 1) {
-    std::pair<int, int> mid = Partition(arr, left, right);
-    if (mid.first <= k_stat && k_stat <= mid.second) {
-      can_use = 0;
-      std::cout << arr[k_stat];
-    } else if (mid.first > k_stat) {
-      right = mid.first - 1;
-    } else {
-      left = mid.second + 1;
+  std::ios::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  int count;
+  int index;
+  long long delta;
+  long long number;
+  std::string type;
+  std::cin >> count;
+  for (int i = 0; i < count; ++i) {
+    ind_to_heap.push_back(-1);
+    std::cin >> type;
+    if (type == "insert") {
+      std::cin >> number;
+      ind_to_heap[i] = size;
+      heap_to_ind.push_back(i);
+      Insert(number);
+    } else if (type == "getMin") {
+      GetMin();
+    } else if (type == "extractMin") {
+      ExtractMin();
+    } else if (type == "decreaseKey") {
+      std::cin >> index >> delta;
+      index--;
+      DecreaseKey(index, delta);
     }
   }
   return 0;

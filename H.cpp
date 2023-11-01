@@ -1,63 +1,263 @@
+#include <cmath>
 #include <iostream>
+#include <string>
 #include <vector>
 
-int GivePivot(int left, int right) {
-  int random_index = left + rand() % (right - left + 1);
-  return random_index;
+const int kMagicNumber = 6;
+
+long GetDepth(long index) {
+  long depth = -1;
+  while (index > 0) {
+    depth++;
+    index >>= 1;
+  }
+  return depth;
 }
 
-std::pair<int, int> Partition(std::vector<long long>& arr, int left,
-                              int right) {
-  int pivot_ind = GivePivot(left, right);
-  long long pivot = arr[pivot_ind];
-  int equal_left = pivot_ind;
-  int equal_right = pivot_ind;
-  for (int i = equal_left - 1; i >= left; --i) {
-    if (arr[i] == pivot) {
-      std::swap(arr[i], arr[equal_left - 1]);
-      equal_left--;
-    } else if (arr[i] > pivot) {
-      std::swap(arr[i], arr[equal_left - 1]);
-      std::swap(arr[equal_left - 1], arr[equal_right]);
-      equal_left--;
-      equal_right--;
-    }
+long ParentIndex(long index) {
+  if (index == 0) {
+    return -1;
   }
-  for (int i = equal_right + 1; i <= right; ++i) {
-    if (arr[i] == pivot) {
-      std::swap(arr[equal_right + 1], arr[i]);
-      equal_right++;
-    } else if (arr[i] < pivot) {
-      std::swap(arr[i], arr[equal_right + 1]);
-      std::swap(arr[equal_right + 1], arr[equal_left]);
-      equal_right++;
-      equal_left++;
-    }
-  }
-  return std::pair<int, int>(equal_left, equal_right);
+  return (index - 1) / 2;
 }
 
-void QuickSort(std::vector<long long>& arr, int left, int right) {
-  if (left < right) {
-    std::pair<int, int> pivot = Partition(arr, left, right);
-    QuickSort(arr, left, pivot.first - 1);
-    QuickSort(arr, pivot.second + 1, right);
+long Minimum(std::vector<long long>& heap, std::vector<long>& ind, int len,
+             long size) {
+  long ans = ind[0];
+  for (int i = 1; i < len; ++i) {
+    if (ind[i] < size && heap[ind[i]] < heap[ans]) {
+      ans = ind[i];
+    }
   }
+  return ans;
+}
+
+long Maximum(std::vector<long long>& heap, std::vector<long>& ind, int len,
+             long size) {
+  long ans = ind[0];
+  for (int i = 1; i < len; ++i) {
+    if (ind[i] < size && heap[ind[i]] > heap[ans]) {
+      ans = ind[i];
+    }
+  }
+  return ans;
+}
+
+long GrandIndex(long index) { return ParentIndex(ParentIndex(index)); }
+
+long LeftChild(long index) { return 2 * index + 1; }
+long RightChild(long index) { return 2 * index + 2; }
+long GrChild1(long index) { return LeftChild(LeftChild(index)); }
+long GrChild2(long index) { return RightChild(LeftChild(index)); }
+long GrChild3(long index) { return LeftChild(RightChild(index)); }
+long GrChild4(long index) { return RightChild(RightChild(index)); }
+
+void PushUpMin(std::vector<long long>& heap, long index) {
+  if (index == 0) {
+    return;
+  }
+  if (GrandIndex(index) >= 0 && heap[index] < heap[GrandIndex(index)]) {
+    std::swap(heap[index], heap[GrandIndex(index)]);
+    index = GrandIndex(index);
+    PushUpMin(heap, index);
+  }
+}
+
+void PushUpMax(std::vector<long long>& heap, long index) {
+  if (index < 3) {
+    return;
+  }
+  if (GrandIndex(index) >= 0 && heap[index] > heap[GrandIndex(index)]) {
+    std::swap(heap[index], heap[GrandIndex(index)]);
+    index = GrandIndex(index);
+    PushUpMax(heap, index);
+  }
+}
+
+void PushUp(std::vector<long long>& heap, long index) {
+  if (GetDepth(index + 1) % 2 == 0) {
+    if (index == 0) {
+      return;
+    }
+    if (heap[ParentIndex(index)] < heap[index]) {
+      std::swap(heap[ParentIndex(index)], heap[index]);
+      index = ParentIndex(index);
+      PushUpMax(heap, index);
+    } else {
+      PushUpMin(heap, index);
+    }
+  } else {
+    if (heap[ParentIndex(index)] > heap[index]) {
+      std::swap(heap[ParentIndex(index)], heap[index]);
+      index = ParentIndex(index);
+      PushUpMin(heap, index);
+    } else {
+      PushUpMax(heap, index);
+    }
+  }
+}
+
+void PushDown(std::vector<long long>& heap, long index, long size);
+
+void PushDownMax(std::vector<long long>& heap, long index, long size) {
+  if (LeftChild(index) > size - 1 || size == 0) {
+    return;
+  }
+  std::vector<long> ind = {LeftChild(index), RightChild(index),
+                           GrChild1(index),  GrChild2(index),
+                           GrChild3(index),  GrChild4(index)};
+
+  long max_index = Maximum(heap, ind, kMagicNumber, size);
+  if (max_index >= GrChild1(index)) {
+    if (heap[max_index] > heap[index]) {
+      std::swap(heap[max_index], heap[index]);
+      if (heap[max_index] < heap[ParentIndex(max_index)]) {
+        std::swap(heap[max_index], heap[ParentIndex(max_index)]);
+      }
+      PushDown(heap, max_index, size);
+    }
+  } else if (heap[max_index] > heap[index]) {
+    std::swap(heap[max_index], heap[index]);
+  }
+}
+
+void PushDownMin(std::vector<long long>& heap, long index, long size) {
+  if (LeftChild(index) > size - 1 || size == 0) {
+    return;
+  }
+  std::vector<long> ind = {LeftChild(index), RightChild(index),
+                           GrChild1(index),  GrChild2(index),
+                           GrChild3(index),  GrChild4(index)};
+
+  long min_index = Minimum(heap, ind, kMagicNumber, size);
+  if (min_index >= GrChild1(index)) {
+    if (heap[min_index] < heap[index]) {
+      std::swap(heap[min_index], heap[index]);
+      if (heap[min_index] > heap[ParentIndex(min_index)]) {
+        std::swap(heap[min_index], heap[ParentIndex(min_index)]);
+      }
+      PushDown(heap, min_index, size);
+    }
+  } else if (heap[min_index] < heap[index]) {
+    std::swap(heap[min_index], heap[index]);
+  }
+}
+
+void PushDown(std::vector<long long>& heap, long index, long size) {
+  if (GetDepth(index + 1) % 2 == 0) {
+    PushDownMin(heap, index, size);
+  } else {
+    PushDownMax(heap, index, size);
+  }
+}
+
+void Insert(std::vector<long long>& heap, long long number, long& size) {
+  heap.push_back(number);
+  PushUp(heap, size);
+  size++;
+  std::cout << "ok\n";
+}
+
+void ExtractMin(std::vector<long long>& heap, long& size) {
+  if (size == 0) {
+    std::cout << "error\n";
+    return;
+  }
+  std::cout << heap[0] << "\n";
+  std::swap(heap[0], heap[size - 1]);
+  heap.pop_back();
+  size--;
+  PushDown(heap, 0, size);
+}
+
+void GetMin(std::vector<long long>& heap, long size) {
+  if (size == 0) {
+    std::cout << "error\n";
+  } else {
+    std::cout << heap[0] << "\n";
+  }
+}
+
+void ExtractMax(std::vector<long long>& heap, long& size) {
+  if (size == 0) {
+    std::cout << "error\n";
+    return;
+  }
+  if (size == 1) {
+    std::cout << heap[0] << "\n";
+    heap.pop_back();
+    size--;
+    return;
+  }
+  if (size == 2) {
+    std::cout << heap[1] << "\n";
+    heap.pop_back();
+    size--;
+    return;
+  }
+  std::cout << std::max(heap[1], heap[2]) << "\n";
+  if (heap[1] > heap[2]) {
+    std::swap(heap[1], heap[size - 1]);
+    heap.pop_back();
+    size--;
+    PushDown(heap, 1, size);
+  } else {
+    std::swap(heap[2], heap[size - 1]);
+    heap.pop_back();
+    size--;
+    PushDown(heap, 2, size);
+  }
+}
+
+void GetMax(std::vector<long long>& heap, long size) {
+  if (size == 0) {
+    std::cout << "error\n";
+    return;
+  }
+  if (size == 1) {
+    std::cout << heap[0] << "\n";
+    return;
+  }
+  if (size == 2) {
+    std::cout << heap[1] << "\n";
+    return;
+  }
+  std::cout << std::max(heap[1], heap[2]) << "\n";
+}
+
+void Size(long& size) { std::cout << size << "\n"; }
+
+void Clear(std::vector<long long>& heap, long& size) {
+  heap.clear();
+  size = 0;
+  std::cout << "ok\n";
 }
 
 int main() {
-  std::ios::sync_with_stdio(false);
-  std::cin.tie(nullptr);
-  int number;
-  std::cin >> number;
-  std::vector<long long> arr(number);
-  for (int i = 0; i < number; ++i) {
-    std::cin >> arr[i];
+  std::vector<long long> heap(0);
+  std::string command;
+  long long number;
+  long count;
+  long size = 0;
+  std::cin >> count;
+  for (long i = 0; i < count; ++i) {
+    std::cin >> command;
+    if (command == "insert") {
+      std::cin >> number;
+      Insert(heap, number, size);
+    } else if (command == "extract_min") {
+      ExtractMin(heap, size);
+    } else if (command == "get_min") {
+      GetMin(heap, size);
+    } else if (command == "extract_max") {
+      ExtractMax(heap, size);
+    } else if (command == "get_max") {
+      GetMax(heap, size);
+    } else if (command == "size") {
+      Size(size);
+    } else if (command == "clear") {
+      Clear(heap, size);
+    }
   }
-  QuickSort(arr, 0, number - 1);
-  for (int i = 0; i < number; ++i) {
-    std::cout << arr[i] << " ";
-  }
-
   return 0;
 }
