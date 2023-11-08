@@ -1,6 +1,22 @@
 #include <deque>
 #include <iostream>
 
+void UpdateDeq(std::deque<int>& left, std::deque<int>& right, int& left_size,
+               int& right_size) {
+  while (left_size - right_size > 1) {
+    right.push_front(left.back());
+    left.pop_back();
+    right_size++;
+    left_size--;
+  }
+  while (right_size > left_size) {
+    left.push_back(right.front());
+    right.pop_front();
+    left_size++;
+    right_size--;
+  }
+}
+
 int main() {
   int count;
   std::cin >> count;
@@ -25,17 +41,6 @@ int main() {
       left.push_back(index);
       left_size++;
     }
-    while (left_size - right_size > 1) {
-      right.push_front(left.back());
-      left.pop_back();
-      right_size++;
-      left_size--;
-    }
-    while (right_size > left_size) {
-      left.push_back(right.front());
-      right.pop_front();
-      left_size++;
-      right_size--;
-    }
+    UpdateDeq(left, right, left_size, right_size);
   }
 }

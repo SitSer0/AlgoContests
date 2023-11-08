@@ -3,63 +3,69 @@
 #include <queue>
 #include <string>
 
-std::queue<long long> que;
-std::deque<long long> dec;
-int size = 0;
+class MinQueue {
+ public:
+  MinQueue() { size_ = 0; }
 
-void Add(long long number) {
-  que.push(number);
-  while (not dec.empty() && dec.back() > number) {
-    dec.pop_back();
+  void Add(long long number) {
+    que_.push(number);
+    while (!dec_.empty() && dec_.back() > number) {
+      dec_.pop_back();
+    }
+    dec_.push_back(number);
+    size_++;
+    std::cout << "ok\n";
   }
-  dec.push_back(number);
-  size++;
-  std::cout << "ok\n";
-}
 
-void Pop() {
-  if (size == 0) {
-    std::cout << "error\n";
-    return;
+  void Pop() {
+    if (size_ == 0) {
+      std::cout << "error\n";
+      return;
+    }
+    size_--;
+    std::cout << que_.front() << "\n";
+    if (que_.front() == dec_.front()) {
+      que_.pop();
+      dec_.pop_front();
+    } else {
+      que_.pop();
+    }
   }
-  size--;
-  std::cout << que.front() << "\n";
-  if (que.front() == dec.front()) {
-    que.pop();
-    dec.pop_front();
-  } else {
-    que.pop();
-  }
-}
 
-void Front() {
-  if (size == 0) {
-    std::cout << "error\n";
-    return;
+  void Front() {
+    if (size_ == 0) {
+      std::cout << "error\n";
+      return;
+    }
+    std::cout << que_.front() << "\n";
   }
-  std::cout << que.front() << "\n";
-}
 
-void Size() { std::cout << size << "\n"; }
+  void Size() const { std::cout << size_ << "\n"; }
 
-void Clear() {
-  size = 0;
-  while (not que.empty()) {
-    que.pop();
+  void Clear() {
+    size_ = 0;
+    while (!que_.empty()) {
+      que_.pop();
+    }
+    while (!dec_.empty()) {
+      dec_.pop_back();
+    }
+    std::cout << "ok\n";
   }
-  while (not dec.empty()) {
-    dec.pop_back();
-  }
-  std::cout << "ok\n";
-}
 
-void GetMin() {
-  if (size == 0) {
-    std::cout << "error\n";
-    return;
+  void GetMin() {
+    if (size_ == 0) {
+      std::cout << "error\n";
+      return;
+    }
+    std::cout << dec_.front() << "\n";
   }
-  std::cout << dec.front() << "\n";
-}
+
+ private:
+  std::queue<long long> que_;
+  std::deque<long long> dec_;
+  int size_;
+};
 
 int main() {
   std::ios::sync_with_stdio(false);
@@ -68,21 +74,23 @@ int main() {
   long long number;
   std::cin >> count;
   std::string type;
+  MinQueue min_queue;
+
   for (int i = 0; i < count; ++i) {
     std::cin >> type;
     if (type == "enqueue") {
       std::cin >> number;
-      Add(number);
+      min_queue.Add(number);
     } else if (type == "dequeue") {
-      Pop();
+      min_queue.Pop();
     } else if (type == "front") {
-      Front();
+      min_queue.Front();
     } else if (type == "size") {
-      Size();
+      min_queue.Size();
     } else if (type == "clear") {
-      Clear();
+      min_queue.Clear();
     } else if (type == "min") {
-      GetMin();
+      min_queue.GetMin();
     }
   }
   return 0;
