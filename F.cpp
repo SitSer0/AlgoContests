@@ -6,32 +6,6 @@ class MinHeap {
  public:
   MinHeap() { size_ = 0; }
 
-  static int Parent(int index) { return (index - 1) / 2; }
-  static int LeftChild(int index) { return 2 * index + 1; }
-  static int RightChild(int index) { return 2 * index + 2; }
-
-  void PushUp(int index) {
-    if (index == 0 || heap_[Parent(index)] <= heap_[index]) {
-      return;
-    }
-    Swap(index, Parent(index));
-    PushUp(Parent(index));
-  }
-
-  void PushDown(int index) {
-    if (LeftChild(index) > size_ - 1) {
-      return;
-    }
-    int min_index = LeftChild(index) == size_ - 1 ||
-        heap_[LeftChild(index)] < heap_[RightChild(index)]
-                    ? LeftChild(index)
-                    : RightChild(index);
-    if (heap_[min_index] < heap_[index]) {
-      Swap(index, min_index);
-      PushDown(min_index);
-    }
-  }
-
   void Insert(long long number) {
     heap_.push_back(number);
     size_++;
@@ -57,6 +31,33 @@ class MinHeap {
   int size_;
 
   void Swap(int index1, int index2) { std::swap(heap_[index1], heap_[index2]); }
+
+  static int Parent(int index) { return (index - 1) / 2; }
+  static int LeftChild(int index) { return 2 * index + 1; }
+  static int RightChild(int index) { return 2 * index + 2; }
+
+
+  void PushUp(int index) {
+    if (index == 0 || heap_[Parent(index)] <= heap_[index]) {
+      return;
+    }
+    Swap(index, Parent(index));
+    PushUp(Parent(index));
+  }
+
+  void PushDown(int index) {
+    if (LeftChild(index) > size_ - 1) {
+      return;
+    }
+    int min_index = LeftChild(index) == size_ - 1 ||
+        heap_[LeftChild(index)] < heap_[RightChild(index)]
+                    ? LeftChild(index)
+                    : RightChild(index);
+    if (heap_[min_index] < heap_[index]) {
+      Swap(index, min_index);
+      PushDown(min_index);
+    }
+  }
 };
 
 int main() {
