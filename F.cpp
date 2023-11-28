@@ -5,38 +5,6 @@
 class MinHeap {
  public:
   MinHeap() { size_ = 0; }
-
-  void Insert(long long number) {
-    heap_.push_back(number);
-    size_++;
-    PushUp(size_ - 1);
-  }
-
-  long long GetMin() { return heap_[0]; }
-
-  void ExtractMin() {
-    Swap(0, size_ - 1);
-    size_--;
-    heap_.pop_back();
-    PushDown(0);
-  }
-
-  void DecreaseKey(int index, long long delta) {
-    heap_[index] -= delta;
-    PushUp(index);
-  }
-
- private:
-  std::vector<long long> heap_;
-  int size_;
-
-  void Swap(int index1, int index2) { std::swap(heap_[index1], heap_[index2]); }
-
-  static int Parent(int index) { return (index - 1) / 2; }
-  static int LeftChild(int index) { return 2 * index + 1; }
-  static int RightChild(int index) { return 2 * index + 2; }
-
-
   void PushUp(int index) {
     if (index == 0 || heap_[Parent(index)] <= heap_[index]) {
       return;
