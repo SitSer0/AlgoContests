@@ -1,7 +1,56 @@
 #include <iostream>
 #include <vector>
 
+void Merge(std::vector<int>& vec1, std::vector<int>& vec2,
+           std::vector<int>& vec) {
+  int len1 = vec1.size();
+  int len2 = vec2.size();
+  int ind = 0;
+  int jnd = 0;
+  while (ind < len1 && jnd < len2) {
+    if (vec1[ind] < vec2[jnd]) {
+      vec.push_back(vec1[ind]);
+      ind++;
+    } else {
+      vec.push_back(vec2[jnd]);
+      jnd++;
+    }
+  }
+  while (ind < len1) {
+    vec.push_back(vec1[ind]);
+    ind++;
+  }
+  while (jnd < len2) {
+    vec.push_back(vec2[jnd]);
+    jnd++;
+  }
+}
+
 class MergeTree {
+ public:
+  int q_left;
+  int q_right;
+  MergeTree(int number) {
+    tree_.resize(4 * number, std::vector<int>(0));
+    arr_.resize(number);
+    for (int i = 0; i < number; ++i) {
+      std::cin >> arr_[i];
+    }
+    Build(0, 0, number - 1);
+  }
+
+  int GetCount(int vertex, int left, int right, int value) {
+    if (left > q_right || right < q_left) {
+      return 0;
+    }
+    if (q_left <= left && right <= q_right) {
+      return Ans(tree_[vertex], value);
+    }
+    int mid = (left + right) / 2;
+    return GetCount(LeftChild(vertex), left, mid, value) +
+        GetCount(RightChild(vertex), mid + 1, right, value);
+  }
+
  private:
   std::vector<std::vector<int>> tree_;
   std::vector<int> arr_;
@@ -29,31 +78,6 @@ class MergeTree {
     return left + 1;
   }
 
-  static void Merge(std::vector<int>& vec1, std::vector<int>& vec2,
-                    std::vector<int>& vec) {
-    int len1 = vec1.size();
-    int len2 = vec2.size();
-    int ind = 0;
-    int jnd = 0;
-    while (ind < len1 && jnd < len2) {
-      if (vec1[ind] < vec2[jnd]) {
-        vec.push_back(vec1[ind]);
-        ind++;
-      } else {
-        vec.push_back(vec2[jnd]);
-        jnd++;
-      }
-    }
-    while (ind < len1) {
-      vec.push_back(vec1[ind]);
-      ind++;
-    }
-    while (jnd < len2) {
-      vec.push_back(vec2[jnd]);
-      jnd++;
-    }
-  }
-
   void Build(int vertex, int left, int right) {
     if (left == right) {
       tree_[vertex].push_back(arr_[left]);
@@ -63,30 +87,6 @@ class MergeTree {
     Build(LeftChild(vertex), left, mid);
     Build(RightChild(vertex), mid + 1, right);
     Merge(tree_[LeftChild(vertex)], tree_[RightChild(vertex)], tree_[vertex]);
-  }
-
- public:
-  int q_left;
-  int q_right;
-  MergeTree(int number) {
-    tree_.resize(4 * number, std::vector<int>(0));
-    arr_.resize(number);
-    for (int i = 0; i < number; ++i) {
-      std::cin >> arr_[i];
-    }
-    Build(0, 0, number - 1);
-  }
-
-  int GetCount(int vertex, int left, int right, int value) {
-    if (left > q_right || right < q_left) {
-      return 0;
-    }
-    if (q_left <= left && right <= q_right) {
-      return Ans(tree_[vertex], value);
-    }
-    int mid = (left + right) / 2;
-    return GetCount(LeftChild(vertex), left, mid, value) +
-           GetCount(RightChild(vertex), mid + 1, right, value);
   }
 };
 

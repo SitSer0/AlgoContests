@@ -4,8 +4,6 @@
 
 class SparseTable {
  public:
-  std::vector<int> arr;
-  std::vector<std::vector<int>> table;
 
   SparseTable(int number) {
     arr.resize(number);
@@ -31,6 +29,9 @@ class SparseTable {
     int right_index = table[ln][right - (1 << ln) + 1];
     return arr[left_index] <= arr[right_index] ? left_index : right_index;
   }
+
+  std::vector<int> arr;
+  std::vector<std::vector<int>> table;
 };
 
 int main() {

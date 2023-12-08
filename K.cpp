@@ -25,6 +25,19 @@ bool Comp(const Event& aa, const Event& bb) {
 }
 
 class SegmentTree {
+ public:
+  SegmentTree(const std::vector<int>& arr) : arr_(arr), size_(arr.size()) {
+    tree_.resize(4 * size_);
+  }
+
+  void Add(int y1, int y2, int value) {
+    left_ = y1;
+    right_ = y2 - 1;
+    Update(0, 0, size_ - 2, value);
+  }
+
+  int64_t Ans() { return tree_[0].ans; }
+
  private:
   std::vector<Vertex> tree_;
   std::vector<int> arr_;
@@ -53,19 +66,6 @@ class SegmentTree {
           tree_[LeftChild(vertex)].ans + tree_[RightChild(vertex)].ans;
     }
   }
-
- public:
-  SegmentTree(const std::vector<int>& arr) : arr_(arr), size_(arr.size()) {
-    tree_.resize(4 * size_);
-  }
-
-  void Add(int y1, int y2, int value) {
-    left_ = y1;
-    right_ = y2 - 1;
-    Update(0, 0, size_ - 2, value);
-  }
-
-  int64_t Ans() { return tree_[0].ans; }
 };
 
 void Read(int& number, std::vector<Event>& events, std::vector<int>& cord_y) {
