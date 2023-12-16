@@ -1,96 +1,206 @@
-#include <deque>
 #include <iostream>
-#include <queue>
-#include <string>
 
-class MinQueue {
+class Treap {
  public:
-  MinQueue() { size_ = 0; }
+  Treap() : root_(nullptr) {}
 
-  void Add(long long number) {
-    que_.push(number);
-    while (!dec_.empty() && dec_.back() > number) {
-      dec_.pop_back();
-    }
-    dec_.push_back(number);
-    size_++;
-    std::cout << "ok\n";
-  }
+  ~Treap() { Clear(root_); }
 
-  void Pop() {
-    if (size_ == 0) {
-      std::cout << "error\n";
-      return;
-    }
-    size_--;
-    std::cout << que_.front() << "\n";
-    if (que_.front() == dec_.front()) {
-      que_.pop();
-      dec_.pop_front();
+  void Add(int val) { Insert(val); }
+
+  void Delete(int val) { Remove(val); }
+
+  void Exists(int val) { std::cout << (Find(val) ? "true" : "false") << "\n"; }
+
+  void Next(int val) {
+    Node* res = NextNode(root_, val, nullptr);
+    if (res != nullptr) {
+      std::cout << res->key << "\n";
     } else {
-      que_.pop();
+      std::cout << "none\n";
     }
   }
 
-  void Front() {
-    if (size_ == 0) {
-      std::cout << "error\n";
-      return;
+  void Prev(int val) {
+    Node* res = PrevNode(root_, val, nullptr);
+    if (res != nullptr) {
+      std::cout << res->key << "\n";
+    } else {
+      std::cout << "none\n";
     }
-    std::cout << que_.front() << "\n";
   }
 
-  void Size() const { std::cout << size_ << "\n"; }
-
-  void Clear() {
-    size_ = 0;
-    while (!que_.empty()) {
-      que_.pop();
+  void Kth(int val) {
+    Node* res = KthNode(root_, val);
+    if (res != nullptr) {
+      std::cout << res->key << "\n";
+    } else {
+      std::cout << "none\n";
     }
-    while (!dec_.empty()) {
-      dec_.pop_back();
-    }
-    std::cout << "ok\n";
-  }
-
-  void GetMin() {
-    if (size_ == 0) {
-      std::cout << "error\n";
-      return;
-    }
-    std::cout << dec_.front() << "\n";
   }
 
  private:
-  std::queue<long long> que_;
-  std::deque<long long> dec_;
-  int size_;
+  struct Node {
+    int key;
+    int prior;
+    int size;
+    Node* left;
+    Node* right;
+    Node(int key)
+        : key(key), prior(rand()), size(1), left(nullptr), right(nullptr) {}
+  };
+
+  void Clear(Node* root) {
+    if (root == nullptr) {
+      return;
+    }
+    Clear(root->left);
+    Clear(root->right);
+    delete root;
+  }
+
+  Node* root_;
+
+  static int Size(Node* node) {
+    if (node == nullptr) {
+      return 0;
+    }
+    return node->size;
+  }
+
+  static void UpdateSize(Node* node) {
+    if (node == nullptr) {
+      return;
+    }
+    node->size = 1 + Size(node->left) + Size(node->right);
+  }
+
+  std::pair<Node*, Node*> Split(Node* node, int key) {
+    if (node == nullptr) {
+      return {nullptr, nullptr};
+    }
+    if (key > node->key) {
+      auto right_tree = Split(node->right, key);
+      node->right = right_tree.first;
+      UpdateSize(node);
+      return {node, right_tree.second};
+    }
+    auto left_tree = Split(node->left, key);
+    node->left = left_tree.second;
+    UpdateSize(node);
+    return {left_tree.first, node};
+  }
+
+  Node* Merge(Node* node1, Node* node2) {
+    if (node1 == nullptr) {
+      return node2;
+    }
+    if (node2 == nullptr) {
+      return node1;
+    }
+    if (node1->prior > node2->prior) {
+      node1->right = Merge(node1->right, node2);
+      UpdateSize(node1);
+      return node1;
+    }
+    node2->left = Merge(node1, node2->left);
+    UpdateSize(node2);
+    return node2;
+  }
+
+  void Insert(int key) {
+    if (Find(key)) {
+      return;
+    }
+    auto treaps = Split(root_, key);
+    Node* new_node = new Node(key);
+    root_ = Merge(Merge(treaps.first, new_node), treaps.second);
+  }
+
+  void Remove(int key) {
+    if (!Find(key)) {
+      return;
+    }
+    std::pair<Node*, Node*> under_key = Split(root_, key);
+    std::pair<Node*, Node*> above_key = Split(under_key.second, key + 1);
+    delete above_key.first;
+    root_ = Merge(under_key.first, above_key.second);
+  }
+
+  bool Find(int key) {
+    Node* current = root_;
+    while (current != nullptr) {
+      if (key < current->key) {
+        current = current->left;
+      } else if (key > current->key) {
+        current = current->right;
+      } else {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Node* NextNode(Node* node, int key, Node* best) {
+    if (node == nullptr) {
+      return best;
+    }
+    if (node->key > key) {
+      if (best == nullptr || node->key < best->key) {
+        best = node;
+      }
+      return NextNode(node->left, key, best);
+    }
+    return NextNode(node->right, key, best);
+  }
+
+  Node* PrevNode(Node* node, int key, Node* best) {
+    if (node == nullptr) {
+      return best;
+    }
+    if (node->key < key) {
+      if (best == nullptr || node->key > best->key) {
+        best = node;
+      }
+      return PrevNode(node->right, key, best);
+    }
+    return PrevNode(node->left, key, best);
+  }
+
+  Node* KthNode(Node* node, int kth) {
+    if (node == nullptr) {
+      return nullptr;
+    }
+    int left_size = Size(node->left);
+    if (kth < left_size) {
+      return KthNode(node->left, kth);
+    }
+    if (kth == left_size) {
+      return node;
+    }
+    return KthNode(node->right, kth - left_size - 1);
+  }
 };
 
 int main() {
   std::ios::sync_with_stdio(false);
   std::cin.tie(nullptr);
-  int count;
-  long long number;
-  std::cin >> count;
   std::string type;
-  MinQueue min_queue;
-
-  for (int i = 0; i < count; ++i) {
-    std::cin >> type;
-    if (type == "enqueue") {
-      std::cin >> number;
-      min_queue.Add(number);
-    } else if (type == "dequeue") {
-      min_queue.Pop();
-    } else if (type == "front") {
-      min_queue.Front();
-    } else if (type == "size") {
-      min_queue.Size();
-    } else if (type == "clear") {
-      min_queue.Clear();
-    } else if (type == "min") {
-      min_queue.GetMin();
+  int val;
+  Treap tree;
+  while (std::cin >> type >> val) {
+    if (type == "insert") {
+      tree.Add(val);
+    } else if (type == "delete") {
+      tree.Delete(val);
+    } else if (type == "exists") {
+      tree.Exists(val);
+    } else if (type == "next") {
+      tree.Next(val);
+    } else if (type == "prev") {
+      tree.Prev(val);
+    } else if (type == "kth") {
+      tree.Kth(val);
     }
   }
   return 0;
