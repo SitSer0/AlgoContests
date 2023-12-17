@@ -9,10 +9,7 @@ struct Node {
 
 class HashTable {
  public:
-  HashTable(int64_t number) {
-    table_.resize(number, nullptr);
-    size_ = number;
-  }
+  HashTable(int64_t number) : table_(number, nullptr), size_(number) {}
 
   void Insert(int64_t val) {
     if (Find(val)) {

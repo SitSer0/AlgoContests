@@ -17,10 +17,7 @@ struct Node {
 
 class HashTable {
  public:
-  HashTable(int64_t number) {
-    table_.resize(number, nullptr);
-    size_ = number;
-  }
+  HashTable(int64_t number) : size_(number), table_(number, nullptr) {}
 
   void Insert(int64_t val) {
     if (Find(val) != nullptr) {
@@ -110,15 +107,15 @@ class HashTable {
   }
 
  private:
+  int64_t HashFunc(int64_t val) const {
+    return ((kA * (val % kP) + kB) % kP) % size_;
+  }
+
   int64_t size_;
   std::vector<Node*> table_;
   const int64_t kA = 17;
   const int64_t kB = 101;
   const int64_t kP = 1000000007;
-
-  int64_t HashFunc(const int64_t kVal) const {
-    return ((kA * (kVal % kP) + kB) % kP) % size_;
-  }
 };
 
 int64_t Distance(Point& p1, Point& p2) {

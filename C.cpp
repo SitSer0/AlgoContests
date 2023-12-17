@@ -9,7 +9,7 @@ struct Node {
   Node(std::string pat) : pattern(pat), next(nullptr) {}
 };
 
-std::string UniqToString(std::string str) {
+std::string UniqToString(const std::string& str) {
   std::unordered_map<char, char> char_map;
   char current_char = 'a';
   std::string pattern;
@@ -26,12 +26,9 @@ std::string UniqToString(std::string str) {
 
 class HashTable {
  public:
-  HashTable(int64_t number) {
-    table_.resize(number, nullptr);
-    size_ = number;
-  }
+  HashTable(int64_t number) : table_(number, nullptr), size_(number) {}
 
-  void Insert(std::string& str) {
+  void Insert(const std::string& str) {
     std::string pattern = UniqToString(str);
     int64_t index = HashFunc(pattern);
     Node* new_node = new Node(pattern);
@@ -39,7 +36,7 @@ class HashTable {
     table_[index] = new_node;
   }
 
-  bool Find(std::string str) {
+  bool Find(const std::string& str) {
     std::string pattern = UniqToString(str);
     int64_t index = HashFunc(pattern);
     Node* cur = table_[index];
@@ -63,11 +60,6 @@ class HashTable {
   }
 
  private:
-  std::vector<Node*> table_;
-  int64_t size_;
-  const int64_t kA = 17;
-  const int64_t kP = 1000000007;
-
   int64_t HashFunc(const std::string& pattern) const {
     int64_t hash = 0;
     int64_t st = 1;
@@ -77,6 +69,11 @@ class HashTable {
     }
     return hash;
   }
+
+  std::vector<Node*> table_;
+  int64_t size_;
+  const int64_t kA = 17;
+  const int64_t kP = 1000000007;
 };
 
 int main() {
