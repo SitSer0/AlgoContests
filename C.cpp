@@ -1,96 +1,54 @@
 #include <iostream>
-#include <string>
-#include <unordered_map>
 #include <vector>
 
-struct Node {
-  std::string pattern;
-  Node* next = nullptr;
-  Node(std::string pat) : pattern(pat), next(nullptr) {}
-};
+const int64_t kMaxNumber = 100001;
+const int64_t kMaxCnt = 17;
 
-std::string UniqToString(const std::string& str) {
-  std::unordered_map<char, char> char_map;
-  char current_char = 'a';
-  std::string pattern;
-
-  for (char chr : str) {
-    if (char_map.find(chr) == char_map.end()) {
-      char_map[chr] = current_char++;
+int64_t BinSearch(std::vector<std::vector<int64_t>>& dp, int64_t jnd,
+                  int64_t ind) {
+  int64_t left = 1;
+  int64_t right = jnd;
+  while (right - left > 1) {
+    int64_t mid = left + (right - left) / 2;
+    if (dp[jnd - mid][ind] > dp[mid - 1][ind - 1]) {
+      left = mid;
+    } else {
+      right = mid;
     }
-    pattern += char_map[chr];
   }
-
-  return pattern;
+  return right;
 }
 
-class HashTable {
- public:
-  HashTable(int64_t number) : table_(number, nullptr), size_(number) {}
-
-  void Insert(const std::string& str) {
-    std::string pattern = UniqToString(str);
-    int64_t index = HashFunc(pattern);
-    Node* new_node = new Node(pattern);
-    new_node->next = table_[index];
-    table_[index] = new_node;
+int64_t Solve(int64_t number, int64_t cnt,
+              std::vector<std::vector<int64_t>>& dp) {
+  if (number > 1 && cnt == 0) {
+    return -1;
   }
-
-  bool Find(const std::string& str) {
-    std::string pattern = UniqToString(str);
-    int64_t index = HashFunc(pattern);
-    Node* cur = table_[index];
-    while (cur != nullptr) {
-      if (cur->pattern == pattern) {
-        return true;
-      }
-      cur = cur->next;
-    }
-    return false;
+  if (number == 1) {
+    return 0;
   }
-
-  ~HashTable() {
-    for (Node* head : table_) {
-      while (head != nullptr) {
-        Node* temp = head;
-        head = head->next;
-        delete temp;
-      }
+  for (int64_t i = 1; i <= cnt; ++i) {
+    dp[1][i] = 1;
+  }
+  for (int64_t i = 1; i < number; ++i) {
+    dp[i][0] = __INT_MAX__;
+    dp[i][1] = i;
+  }
+  for (int64_t i = 2; i <= cnt; ++i) {
+    for (int64_t j = 2; j < number; ++j) {
+      int64_t right = BinSearch(dp, j, i);
+      dp[j][i] = std::max(dp[right - 1][i - 1], dp[j - right][i]) + 1;
     }
   }
-
- private:
-  int64_t HashFunc(const std::string& pattern) const {
-    int64_t hash = 0;
-    int64_t st = 1;
-    for (char chr : pattern) {
-      hash = ((hash + st * (int)(chr - 'a' + 1)) % kP) % size_;
-      st = (st * kA) % kP;
-    }
-    return hash;
-  }
-
-  std::vector<Node*> table_;
-  int64_t size_;
-  const int64_t kA = 17;
-  const int64_t kP = 1000000007;
-};
+  return dp[number - 1][cnt];
+}
 
 int main() {
-  std::ios::sync_with_stdio(false);
-  std::cin.tie(nullptr);
-  int number;
-  std::cin >> number;
-  std::string type;
-  std::string inp;
-  HashTable tab(number);
-  for (int i = 0; i < number; ++i) {
-    std::cin >> type >> inp;
-    if (type == "?") {
-      std::cout << (tab.Find(inp) ? "YES" : "NO") << "\n";
-    } else {
-      tab.Insert(inp);
-    }
-  }
-  return 0;
+  int64_t number;
+  int64_t cnt;
+  std::cin >> number >> cnt;
+  cnt = std::min(cnt, kMaxCnt);
+  std::vector<std::vector<int64_t>> dp(kMaxNumber,
+                                       std::vector<int64_t>(kMaxCnt + 1));
+  std::cout << Solve(number, cnt, dp);
 }
