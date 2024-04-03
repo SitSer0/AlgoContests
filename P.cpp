@@ -56,29 +56,11 @@ void CalcGoodMaks(int& good_mask1, int& good_mask2, int number) {
   }
 }
 
-int main() {
-  for (int i = 1; i < 100; ++i) {
-    PrintMask((pow(4, (i + 1) / 2) - 1) / 3, i);
-    std::cout << " " << i << "\n";
-  }
-  int number;
-  int count;
+int SolveDP(int number, std::vector<std::vector<int64_t>>& dp, std::vector<std::string>& arr, int count) {
   int good_mask1 = 0;
   int good_mask2 = 0;
-  char chr;
-  std::string temp;
-  std::cin >> number >> count;
+  int ans = 0;
   CalcGoodMaks(good_mask1, good_mask2, number);
-  std::vector<std::string> arr(count);
-  for (int i = 0; i < number; ++i) {
-    for (int j = 0; j < count; ++j) {
-      std::cin >> chr;
-      arr[j] += chr;
-    }
-  }
-  std::vector<std::vector<int64_t>> dp(std::pow(2, number),
-                                       std::vector<int64_t>(count, 0));
-  int64_t ans = 0;
   for (int mask = 0; mask < std::pow(2, number); ++mask) {
     if (mask == good_mask1 || mask == good_mask2 ||
         !IsGood(arr[0], mask, number)) {
@@ -96,13 +78,36 @@ int main() {
   dp[good_mask1][0] = IsGood(arr[0], good_mask2, number) ? 1 : 0;
   for (int i = 1; i < count; ++i) {
     int point = (IsGood(arr[i], good_mask1, number) ? 1 : 0) +
-                (IsGood(arr[i], good_mask2, number) ? 1 : 0);
+        (IsGood(arr[i], good_mask2, number) ? 1 : 0);
     dp[good_mask2][i] = (dp[good_mask2][i - 1] * point) % kMod;
     dp[good_mask1][i] = (dp[good_mask1][i - 1] * point) % kMod;
   }
   for (int i = 0; i < std::pow(2, number); ++i) {
     ans = (ans + dp[i][count - 1]) % kMod;
   }
-  std::cout << ans;
+  return ans;
+}
+
+int main() {
+  for (int i = 1; i < 100; ++i) {
+    PrintMask((pow(4, (i + 1) / 2) - 1) / 3, i);
+    std::cout << " " << i << "\n";
+  }
+  int number;
+  int count;
+  char chr;
+  std::string temp;
+  std::cin >> number >> count;
+  std::vector<std::string> arr(count);
+  for (int i = 0; i < number; ++i) {
+    for (int j = 0; j < count; ++j) {
+      std::cin >> chr;
+      arr[j] += chr;
+    }
+  }
+  std::vector<std::vector<int64_t>> dp(std::pow(2, number),
+                                       std::vector<int64_t>(count, 0));
+  int64_t ans = 0;
+  std::cout << SolveDP(number, dp, arr, count);
   return 0;
 }
